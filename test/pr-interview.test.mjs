@@ -34,6 +34,9 @@ function fixture({ legacy = false } = {}) {
   return { run, answer, pr, files, comments, calls, completions, client, metadata, github };
 }
 
+const stateOf = comment => JSON.parse(Buffer.from(/^<!-- dh-interview:v1:(\S+) -->/.exec(comment.body)[1], 'base64').toString('utf8'));
+const replyConfig = { ...config, interview: { maxAttempts: 12, maxReplies: 10 } };
+
 test('automatic question, participant answers, coalesced comments and final Korean feedback use the actual source and skill', async () => {
   const f = fixture(); await f.run();
   assert.equal(f.completions.length, 1);
@@ -160,4 +163,90 @@ test('lost response comment leaves a reservation and prevents automatic duplicat
   f.github.request = request;
   await f.run({ triggerCommentId: f.answer('/retry') });
   assert.equal(f.completions.length, 2);
+});
+
+test('each AI comment shows reported usage without feeding the footer into the next prompt', async () => {
+  const f = fixture();
+  const usage = { prompt_tokens: 1200, completion_tokens: 300, total_tokens: 1500,
+    prompt_tokens_details: { cached_tokens: 800 }, completion_tokens_details: { reasoning_tokens: 200 } };
+  await f.run({ client: { complete: async () => ({ text: 'Explain your approach.', usage }) } });
+  assert.match(f.comments[0].body, /입력 1,200, 출력 300, 합계 1,500/);
+  assert.match(f.comments[0].body, /입력 중 캐시 800, 출력 중 추론 200/);
+  assert.deepEqual(stateOf(f.comments[0]).usage, usage);
+  await f.run({ triggerCommentId: f.answer('I use two pointers.') });
+  const history = f.completions[0].filter(message => message.role === 'assistant');
+  assert.deepEqual(history, [{ role: 'assistant', content: 'Explain your approach.' }]);
+  assert.match(f.comments.at(-1).body, /토큰 사용량: 확인 불가/);
+});
+
+test('incomplete responses retain token usage and failed attempts do not count as AI replies', async () => {
+  const f = fixture();
+  await f.run({ client: { complete: async () => { throw Object.assign(new Error('partial'), {
+    kind: 'incomplete', usage: { prompt_tokens: 100, completion_tokens: 20, total_tokens: 120 },
+  }); } } });
+  assert.match(f.comments[0].body, /입력 100, 출력 20, 합계 120/);
+  assert.equal(stateOf(f.comments[0]).status, 'failed');
+  await f.run({ triggerCommentId: f.answer('/retry') });
+  assert.match(f.comments.at(-1).body, /AI 답변 1\/10/);
+});
+
+test('ten AI replies include final feedback, then only an explicit request starts the next round', async () => {
+  const f = fixture();
+  await f.run({ config: replyConfig });
+  for (let reply = 2; reply <= 10; reply++) await f.run({ config: replyConfig, triggerCommentId: f.answer(`Answer ${reply}.`) });
+  assert.equal(f.completions.length, 10);
+  assert.equal(stateOf(f.comments.at(-1)).finished, true);
+  assert.match(f.comments.at(-1).body, /AI 답변 10\/10/);
+  assert.match(f.completions.at(-1).at(-1).content, /마칩니다/);
+  await f.run({ config: replyConfig, triggerCommentId: f.answer('I also considered another solution.') });
+  assert.equal(f.completions.length, 10);
+  const request = f.answer('/interview');
+  await f.run({ config: replyConfig, triggerCommentId: request });
+  assert.equal(f.completions.length, 11);
+  assert.equal(stateOf(f.comments.at(-1)).session, 2);
+  assert.equal(stateOf(f.comments.at(-1)).attempt, 1);
+  assert.match(f.comments.at(-1).body, /면접 2, AI 답변 1\/10/);
+  assert.match(f.completions.at(-1).at(-1).content, /another solution[\s\S]*continue the interview/);
+  await f.run({ config: replyConfig, triggerCommentId: request });
+  assert.equal(f.completions.length, 11);
+});
+
+test('a candidate can resume with a separate mention line while other members cannot', async () => {
+  const f = fixture(); await f.run();
+  await f.run({ triggerCommentId: f.answer('/finish') });
+  await f.run({ actor: 'stranger', triggerCommentId: f.answer('@github-actions[bot]', 'stranger') });
+  assert.equal(f.completions.length, 2);
+  await f.run({ triggerCommentId: f.answer('I would use a StringBuilder.\n\n@github-actions[bot] /interview') });
+  assert.equal(f.completions.length, 3);
+  assert.match(f.completions.at(-1).at(-1).content, /StringBuilder[\s\S]*continue the interview/);
+  assert.equal(stateOf(f.comments.at(-1)).session, 2);
+});
+
+test('old interview comments without session and usage fields can be resumed', async () => {
+  const f = fixture(); await f.run();
+  const old = { ...stateOf(f.comments[0]), finished: true };
+  delete old.session; delete old.usage; delete old.responseCharacters;
+  f.comments[0].body = `<!-- dh-interview:v1:${Buffer.from(JSON.stringify(old)).toString('base64')} -->\nOriginal feedback.`;
+  await f.run({ triggerCommentId: f.answer('/interview') });
+  assert.equal(stateOf(f.comments.at(-1)).session, 2);
+  assert.ok(f.completions.at(-1).some(message => message.content === 'Original feedback.'));
+});
+
+test('failed-call limits require an explicit new interview and oversized commands never reach the model', async () => {
+  const f = fixture();
+  const limits = { ...config, interview: { maxAttempts: 2, maxReplies: 10 } };
+  let calls = 0;
+  const client = { complete: async () => { calls++; throw new Error('offline'); } };
+  await f.run({ config: limits, client });
+  await f.run({ config: limits, client, triggerCommentId: f.answer('/retry') });
+  assert.match(f.comments.at(-1).body, /요청 한도에 도달했습니다.*\/interview/);
+  await f.run({ config: limits, client, triggerCommentId: f.answer('/retry') });
+  assert.equal(calls, 2);
+  await f.run({ config: limits, client, triggerCommentId: f.answer('/interview') });
+  assert.equal(calls, 3);
+  assert.equal(stateOf(f.comments.at(-1)).session, 2);
+  const g = fixture();
+  await g.run({ triggerCommentId: g.answer(' '.repeat(12000) + '/interview') });
+  assert.equal(g.completions.length, 0);
+  assert.equal(stateOf(g.comments.at(-1)).status, 'rejected');
 });

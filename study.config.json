@@ -16,6 +16,7 @@
   "interview": {
     "mode": "mock",
     "maxAttempts": 12,
+    "maxReplies": 10,
     "maxInputCharacters": 48000,
     "maxOutputTokens": 1600
   }

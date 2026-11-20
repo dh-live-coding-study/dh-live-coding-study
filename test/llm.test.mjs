@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { fetchProblem } from '../lib/core.mjs';
-import { chatCompletionsClient, providerSettings } from '../lib/llm.mjs';
+import { chatCompletionsClient, providerSettings, tokenUsage } from '../lib/llm.mjs';
 
 test('provider configuration and token limits reach the Chat Completions request', async () => {
   const settings = providerSettings({ llm: { protocol: 'chat-completions', baseUrl: 'https://default.example/v1', model: 'default' } },
@@ -34,4 +34,23 @@ test('problem material includes the statement and examples without hints or solu
   assert.equal(problem.statement, 'Compare two numbers.');
   assert.equal(JSON.stringify(problem).includes('secret solution'), false);
   assert.equal(Object.hasOwn(problem, 'hints'), false);
+});
+
+test('only reported token counts survive, including usage on an incomplete response', async () => {
+  const raw = { prompt_tokens: 1200, completion_tokens: 300, total_tokens: 1500,
+    prompt_tokens_details: { cached_tokens: 800, private: 'ignored' }, completion_tokens_details: { reasoning_tokens: 200 }, private: 'ignored' };
+  const expected = { prompt_tokens: 1200, completion_tokens: 300, total_tokens: 1500,
+    prompt_tokens_details: { cached_tokens: 800 }, completion_tokens_details: { reasoning_tokens: 200 } };
+  assert.deepEqual(tokenUsage(raw), expected);
+  assert.equal(tokenUsage(null), null);
+  assert.equal(tokenUsage({ ...raw, prompt_tokens: -1 }), null);
+  assert.equal(tokenUsage({ ...raw, total_tokens: 999 }), null);
+  const settings = { baseUrl: 'https://provider.example', model: 'test', apiKey: 'fixture-key' };
+  for (const finish_reason of ['stop', 'length']) {
+    const client = chatCompletionsClient(settings, { fetchImpl: async () => Response.json({
+      choices: [{ message: { content: 'answer' }, finish_reason }], usage: raw,
+    }) });
+    if (finish_reason === 'stop') assert.deepEqual((await client.complete([])).usage, expected);
+    else await assert.rejects(client.complete([]), error => error.kind === 'incomplete' && assert.deepEqual(error.usage, expected) === undefined);
+  }
 });

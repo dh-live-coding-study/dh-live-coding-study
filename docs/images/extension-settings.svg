@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="780" viewBox="0 0 960 780" role="img" aria-labelledby="title desc">
+  <title id="title">등록 정보와 확장 설정 연결하기</title>
+  <desc id="desc">예시 계정으로 그린 설정 안내도. study.config.json의 members에서 github가 본인인 항목을 찾고 id는 멤버 ID에, leetcode는 LeetCode 아이디에 입력한다. 저장소와 본인 토큰을 입력하고 공개 PR 전송 동의를 체크한 뒤 저장하고 LeetCode 탭을 새로 고친다.</desc>
+  <defs>
+    <style>
+      text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif; fill: #172b45; }
+      .label { font-size: 18px; font-weight: 600; }
+      .body { font-size: 18px; }
+      .muted { fill: #52647b; font-size: 16px; }
+      .code { font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace; font-size: 17px; }
+    </style>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M 0 0 L 8 4 L 0 8" fill="none" stroke="#2665bc" stroke-width="1.5"/></marker>
+  </defs>
+  <rect width="960" height="780" rx="16" fill="#f3f6fb"/>
+  <text x="32" y="43" font-size="26" font-weight="700">등록 정보 → 확장 설정</text>
+  <text x="928" y="42" class="muted" text-anchor="end">예시 계정으로 그린 안내도</text>
+  <rect x="32" y="73" width="315" height="450" rx="12" fill="#fff" stroke="#c5d0de"/>
+  <text x="52" y="108" class="code" font-weight="700">study.config.json</text>
+  <text x="52" y="143" class="muted">members에서 본인의</text>
+  <text x="52" y="168" class="muted">github를 찾습니다.</text>
+  <text x="52" y="207" class="code">{</text>
+  <rect x="48" y="226" width="283" height="39" rx="6" fill="#eef5ff"/>
+  <text x="65" y="253" class="code">"id": "learner",</text>
+  <rect x="48" y="318" width="283" height="39" rx="6" fill="#eef5ff"/>
+  <text x="65" y="345" class="code">"leetcode": "example-lc",</text>
+  <text x="65" y="407" class="code">"github": "example-gh"</text>
+  <text x="52" y="441" class="code">}</text>
+  <text x="52" y="484" class="muted">멤버 ID와 GitHub 아이디는</text>
+  <text x="52" y="507" class="muted">서로 다를 수 있습니다.</text>
+  <rect x="390" y="73" width="538" height="625" rx="12" fill="#fff" stroke="#c5d0de"/>
+  <text x="412" y="108" font-size="22" font-weight="700">LeetCode 제출 수집</text>
+  <text x="412" y="146" class="label">GitHub 저장소 (owner/repo)</text>
+  <rect x="412" y="158" width="494" height="40" rx="5" fill="#f8fafc" stroke="#a9b8cb"/>
+  <text x="425" y="184" class="code" style="font-size:17px">dh-live-coding-study/dh-live-coding-study</text>
+  <text x="412" y="237" class="label">설정 파일에 등록한 멤버 ID</text>
+  <rect x="412" y="249" width="494" height="40" rx="5" fill="#eef5ff" stroke="#2665bc"/>
+  <text x="425" y="276" class="code">learner</text>
+  <text x="412" y="329" class="label">LeetCode 아이디</text>
+  <rect x="412" y="341" width="494" height="40" rx="5" fill="#eef5ff" stroke="#2665bc"/>
+  <text x="425" y="368" class="code">example-lc</text>
+  <path d="M 331 246 H 365 V 269 H 407" fill="none" stroke="#2665bc" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M 331 338 H 365 V 361 H 407" fill="none" stroke="#2665bc" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="412" y="421" class="label">본인의 GitHub fine-grained 토큰</text>
+  <rect x="412" y="433" width="494" height="40" rx="5" fill="#f8fafc" stroke="#a9b8cb"/>
+  <text x="425" y="460" class="muted">본인 계정으로 발급한 토큰을 붙여 넣습니다.</text>
+  <rect x="412" y="503" width="22" height="22" rx="4" fill="#2665bc"/>
+  <path d="m 417 513 4 5 8 -10" fill="none" stroke="#fff" stroke-width="2.5"/>
+  <text x="446" y="520" class="body">Java 코드를 공개 PR로 전송하는 데</text>
+  <text x="446" y="547" class="body">동의하고 수집을 켭니다.</text>
+  <rect x="412" y="571" width="91" height="43" rx="6" fill="#2665bc"/>
+  <text x="457" y="599" class="body" style="fill:#fff;text-anchor:middle;font-weight:600">저장</text>
+  <text x="412" y="650" class="muted">저장했습니다. LeetCode 탭을 새로 고치세요.</text>
+  <rect x="32" y="547" width="315" height="151" rx="12" fill="#e9f5ee"/>
+  <text x="52" y="582" class="label" style="fill:#195d36">입력할 값의 출처</text>
+  <text x="52" y="612" class="muted">멤버 ID, LeetCode 아이디는 설정 파일에서,</text>
+  <text x="52" y="638" class="muted">토큰은 본인 계정에서 준비합니다.</text>
+  <text x="52" y="676" class="muted">LLM API 키는 입력하지 않습니다.</text>
+  <text x="32" y="744" class="body">저장 → LeetCode 탭 새로고침 → Java 제출 → Accepted → GitHub PR</text>
+</svg>

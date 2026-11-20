@@ -232,6 +232,19 @@ test('old interview comments without session and usage fields can be resumed', a
   assert.ok(f.completions.at(-1).some(message => message.content === 'Original feedback.'));
 });
 
+test('starting a new round preserves a failed answer without repeating the old finish command', async () => {
+  const f = fixture();
+  const limits = { ...config, interview: { maxAttempts: 2, maxReplies: 10 } };
+  await f.run({ config: limits });
+  await f.run({ config: limits, triggerCommentId: f.answer('I use constant extra space.\n/finish'),
+    client: { complete: async () => { throw new Error('offline'); } } });
+  const result = await f.run({ config: limits, triggerCommentId: f.answer('/interview') });
+  assert.deepEqual(result, { finished: false, attempt: 1 });
+  assert.equal(stateOf(f.comments.at(-1)).session, 2);
+  assert.match(f.completions.at(-1).at(-1).content, /constant extra space[\s\S]*continue the interview/);
+  assert.equal(f.completions.at(-1).some(message => message.content.includes('면접을 마칩니다')), false);
+});
+
 test('failed-call limits require an explicit new interview and oversized commands never reach the model', async () => {
   const f = fixture();
   const limits = { ...config, interview: { maxAttempts: 2, maxReplies: 10 } };

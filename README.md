@@ -2,29 +2,85 @@
 
 정답 판정을 받은 Java 제출 원문을 GitHub PR에 기록하고, PR 댓글에서 영어 모의 면접을 진행합니다. GitHub Actions가 [공개용 코칭 스킬](skills/java-live-coding-coach/SKILL.md)과 제출 코드를 LLM API에 전달하므로 별도 서버를 운영할 필요가 없습니다.
 
-## 시작하기
+## 참여자 설정
 
-설정, 소스 등록, 브라우저 수집, 댓글 면접 PR이 main에 순서대로 병합돼야 전체 흐름을 사용할 수 있습니다. `study.config.json`에 참여자를 등록합니다.
+문제를 제출하는 사람은 대표자도 아래 설정이 필요합니다. 본인의 GitHub 계정으로 조직 초대를 수락하고, 대표자에게 저장소 Write 권한과 [study.config.json](study.config.json)의 참여자 등록을 확인받으세요. 참여자는 LLM API 키를 발급받지 않습니다.
 
-```json
-"members": [
-  { "id": "learner", "leetcode": "YOUR_LEETCODE_USERNAME", "github": "YOUR_GITHUB_LOGIN" }
-]
-```
+### 1. 확장 파일 받기
 
-`id`는 폴더 이름입니다. 수집 당시의 LeetCode 계정과 워크플로를 실행한 GitHub 계정을 등록된 값과 대조합니다. 설정 변경도 `leetcode/` 브랜치의 PR로 제출하고 검토 후 병합합니다.
+[최신 main ZIP 받기](https://github.com/dh-live-coding-study/dh-live-coding-study/archive/refs/heads/main.zip)를 눌러 압축을 풉니다. 저장소의 **Code → Download ZIP**으로 받아도 됩니다. 이미 저장소를 clone했다면 최신 main의 파일을 사용합니다.
 
-대표자는 조직과 저장소의 `Allow GitHub Actions to create and approve pull requests`를 허용합니다. 이 설정에서 생성과 승인이 묶여 있지만 구현은 PR 생성만 합니다. main에는 PR과 CI를 요구하고 갱신 허용 대상을 대표자로 제한합니다. 조직 owner와 저장소 admin도 대표자만 유지하고, 참여자는 조직의 일반 멤버와 저장소 Write 권한으로 등록합니다.
+압축을 푼 폴더 안의 **`extension/`**에 `manifest.json`이 있는지 확인하세요. 이 폴더를 Chrome이 계속 읽으므로 설치 후에도 지우거나 옮기지 않습니다. 별도 빌드나 npm 설치는 필요 없습니다.
 
-면접을 사용하려면 대표자가 [LLM 키와 보호 설정](docs/representative-setup.md)을 먼저 완료합니다. 참여자는 LLM 키를 발급받지 않고 본인의 GitHub 토큰을 사용합니다.
+### 2. Chrome에 등록하기
 
-1. 본인의 fine-grained GitHub 토큰을 만듭니다. Resource owner는 스터디 조직, Repository access는 이 저장소 하나만 지정합니다.
-2. 권한은 `Actions: Read and write`, `Pull requests: Read-only`, `Contents: Read-only`로 지정합니다. 읽기 권한은 PR에 실제 원문이 저장됐는지 확인하는 데 사용합니다.
-3. Chrome의 `chrome://extensions`에서 개발자 모드를 켜고 `압축해제된 확장 프로그램을 로드합니다`로 `extension/` 폴더를 선택합니다.
-4. 확장 아이콘을 열어 저장소, 등록된 멤버 ID, LeetCode 아이디와 토큰을 입력합니다. 공개 전송 동의를 켜고 저장합니다.
-5. LeetCode 탭을 새로 고친 뒤 Java 코드를 제출합니다. 확장의 대기 목록, GitHub Actions 실행, 생성된 PR의 `Solution.java`를 확인합니다.
+1. 새 탭의 주소창에 `chrome://extensions`를 입력합니다.
+2. 오른쪽 위 **개발자 모드(Developer mode)**를 켭니다.
+3. **압축해제된 확장 프로그램을 로드합니다(Load unpacked)**를 누르고 `extension/` 폴더를 선택합니다. ZIP 파일이나 저장소 전체 폴더를 선택하면 안 됩니다.
+4. 목록에 **DH LeetCode submission collector**가 나타나고 사용 상태가 켜져 있는지 확인합니다.
 
-확장 업데이트 뒤에도 LeetCode 탭을 새로 고칩니다. 토큰은 확장 로컬 저장소에 보관하며 페이지 스크립트에 전달하지 않습니다. 로그인 쿠키는 읽거나 GitHub로 보내지 않습니다. 공용 기기에는 토큰을 저장하지 않습니다.
+![Chrome 확장 관리 화면 안내도. 개발자 모드를 켜고 Load unpacked를 누른 뒤 manifest.json이 있는 extension 폴더를 선택합니다.](docs/images/extension-install.svg)
+
+위 그림은 설치 위치를 표시한 안내도입니다. Chrome 버전과 언어에 따라 버튼 표시는 다를 수 있습니다. 설치 절차는 [Chrome 공식 안내](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked)를 참고할 수 있습니다.
+
+### 3. 본인의 GitHub 토큰 만들기
+
+[Fine-grained personal access token 만들기](https://github.com/settings/personal-access-tokens/new)를 엽니다. 토큰 이름은 알아보기 쉽게 정하고 만료일을 선택한 뒤, 아래와 같이 설정합니다.
+
+| 항목 | 선택할 값 |
+| --- | --- |
+| Resource owner | `dh-live-coding-study` 조직 |
+| Repository access | **Only select repositories** → `dh-live-coding-study` 저장소 |
+| Repository permissions → Actions | **Read and write** |
+| Repository permissions → Contents | **Read-only** |
+| Repository permissions → Pull requests | **Read-only** |
+
+**Generate token**으로 발급한 값을 다음 단계의 토큰 입력란에 넣습니다. 토큰은 다시 볼 수 없으므로 본인만 사용하는 비밀번호 관리자 등에 보관하고, 채팅이나 PR에 붙여 넣지 마세요. 조직 승인을 요구하는 경우 `pending` 상태에서는 전송할 수 없으므로 대표자에게 승인을 요청합니다. 조직이 Resource owner에 보이지 않으면 초대 수락 여부와 조직의 토큰 정책을 대표자에게 확인하세요. [GitHub 토큰 안내](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
+
+### 4. 수집 설정 저장하기
+
+Chrome 도구 모음의 **확장 프로그램(퍼즐 아이콘)**에서 **DH LeetCode submission collector**를 누르면 설정 화면이 열립니다. 자주 사용한다면 핀 아이콘으로 고정해 두세요.
+
+[study.config.json](study.config.json)의 `members`에서 **본인의 GitHub 아이디(`github`)가 있는 항목**을 찾습니다. 아래 `learner`, `example-lc`, `example-gh`는 설명용 예시이므로 본인의 등록값으로 바꿉니다.
+
+![설정 파일과 확장 입력란을 연결한 안내도. members의 id는 멤버 ID에, leetcode는 LeetCode 아이디에 입력합니다. github는 자신의 등록 항목을 찾는 데 사용하며 토큰은 본인이 발급한 값을 넣습니다.](docs/images/extension-settings.svg)
+
+| 확장 입력란 | 입력할 값 |
+| --- | --- |
+| GitHub 저장소 (owner/repo) | `dh-live-coding-study/dh-live-coding-study` |
+| 설정 파일에 등록한 멤버 ID | 본인 항목의 **`id`**. GitHub 아이디와 다를 수 있습니다. |
+| LeetCode 아이디 | 같은 항목의 **`leetcode`**. 실제 제출할 LeetCode 계정입니다. |
+| 본인의 GitHub fine-grained 토큰 | 3단계에서 본인 GitHub 계정으로 발급한 토큰 |
+
+**Java 코드를 공개 PR로 전송하는 데 동의하고 수집을 켭니다**를 체크하고 **저장**을 누릅니다. `저장했습니다. LeetCode 탭을 새로 고치세요.`라는 문구가 나오면 LeetCode 탭을 새로 고칩니다. 이 저장 메시지는 입력 형식 확인 결과이며, GitHub 권한과 실제 전송은 첫 제출에서 확인합니다.
+
+### 5. 첫 정답 제출하기
+
+등록한 LeetCode 계정으로 Java 풀이를 **Submit**하고 **Accepted** 판정을 기다립니다. **Run**만 누른 경우와 설치 전에 제출한 과거 풀이는 수집하지 않습니다.
+
+확장 설정 화면에서 **대기 중인 제출**을 확인합니다. 처리가 끝나면 **PR 생성 확인 이력**에 링크가 생깁니다. 해당 PR의 `Solution.java`를 확인하고, 첫 면접 질문에 영어 댓글로 답하면 다음 질문이 이어집니다.
+
+| 멈춘 위치 | 확인할 곳 |
+| --- | --- |
+| 대기 목록에 제출이 없음 | 수집 동의와 저장 여부, LeetCode 탭 새로고침, 제출 언어가 Java인지 확인합니다. |
+| 판정 대기 중 | 로그인한 LeetCode 탭을 열고 **판정 재확인**을 누릅니다. |
+| 전송 실패 | 토큰 만료, 조직 승인, 권한과 등록 계정을 확인한 뒤 **다시 전송**을 누릅니다. |
+| 실행 요청은 접수됐지만 PR이 없음 | **Actions 확인**에서 실행 결과를 확인합니다. PR이 생겼다면 **PR 확인**으로 다시 조회합니다. |
+
+### 업데이트하기
+
+최신 main을 받아 설치한 `extension/` 폴더를 갱신하고, `chrome://extensions`의 수집 확장 카드에서 **새로고침**을 누릅니다. 이어서 LeetCode 탭도 새로 고칩니다. 토큰이 만료되거나 교체됐다면 확장 설정에서 새 토큰을 입력하고 저장합니다.
+
+토큰은 이 확장의 로컬 저장소에 보관하며 페이지 스크립트에 전달하지 않습니다. 로그인 쿠키는 읽거나 GitHub로 보내지 않습니다. 공용 기기에는 토큰을 저장하지 않습니다.
+
+<details>
+<summary>대표자 초기 설정</summary>
+
+대표자는 조직과 저장소의 `Allow GitHub Actions to create and approve pull requests`를 허용합니다. 이 설정에서 생성과 승인이 묶여 있지만 구현은 PR 생성만 합니다. main에는 PR과 CI를 요구하고 갱신 허용 대상을 대표자로 제한합니다. 조직 owner와 저장소 admin은 대표자만 유지하고, 참여자는 조직 일반 멤버와 저장소 Write 권한으로 등록합니다.
+
+`study.config.json`의 `members`에 참여자의 `id`, `leetcode`, `github`를 등록합니다. `id`는 풀이 폴더 이름이며, 수집 당시 LeetCode 계정과 토큰을 발급한 GitHub 계정을 등록값과 대조합니다. 설정 변경은 `leetcode/` 브랜치의 PR로 제출하고 검토 후 병합합니다. 면접을 시작하기 전에 [LLM 키와 보호 설정](docs/representative-setup.md)도 완료합니다.
+
+</details>
 
 ## 수집과 원문 보관
 

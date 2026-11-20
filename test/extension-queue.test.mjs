@@ -59,7 +59,7 @@ async function fixture(t, initial = {}) {
 
 test('wrong answers are removed locally and neither unknown nor failed verdicts reach GitHub', async t => {
   const f = await fixture(t);
-  for (const status of ['Wrong Answer', 'Time Limit Exceeded', 'Runtime Error', 'Compile Error']) {
+  for (const status of ['Wrong Answer', 'Time Limit Exceeded', 'Memory Limit Exceeded', 'Output Limit Exceeded', 'Runtime Error', 'Compile Error']) {
     await f.send({ type: 'pending', submission: item(1) });
     await f.send({ type: 'verdict', submissionId: '1', leetcode: 'candidate', status });
     assert.equal(f.saved.queue.length, 0);
@@ -70,6 +70,39 @@ test('wrong answers are removed locally and neither unknown nor failed verdicts 
   assert.equal(f.saved.queue[0].submission.code, source);
   assert.equal(f.tabs[0][1].type, 'recheck');
   assert.equal(f.requests.length, 0);
+});
+
+test('unknown verdicts and legacy unknown states preserve source for a later verdict check', async t => {
+  const f = await fixture(t, { queue: [record(1, 'Unexpected result')] });
+  await f.send({ type: 'retry', id: '1' }, options);
+  assert.equal(f.tabs[0][1].submissionId, '1');
+  await f.send({ type: 'pending', submission: item(2) });
+  for (const status of ['Unexpected result', 'Internal Error', 'Unknown Error', 'Pending']) {
+    await f.send({ type: 'verdict', submissionId: '2', leetcode: 'candidate', status });
+    assert.equal(f.saved.queue.length, 2);
+    assert.equal(f.saved.queue.find(item => item.submission.submissionId === '2').submission.code, source);
+  }
+  assert.equal(f.requests.length, 0);
+});
+
+test('confirmation compares UTF-8 bytes including BOM and invalid byte sequences', async t => {
+  const expected = 'class Solution {} // \uFFFD';
+  const f = await fixture(t, { queue: [{ ...record(1), submission: { ...item(1), status: 'Accepted', code: expected } }] });
+  for (const bytes of [Buffer.from('\uFEFF' + expected), Buffer.concat([Buffer.from('class Solution {} // '), Buffer.from([0xff])])]) {
+    f.receipts.set('1', bytes);
+    await f.send({ type: 'confirm', id: '1' }, options);
+    assert.equal(f.saved.queue[0].submission.code, expected);
+    assert.match(f.saved.queue[0].message, /원문과 다릅니다/);
+  }
+  f.receipts.set('1', expected);
+  await f.send({ type: 'confirm', id: '1' }, options);
+  assert.equal(f.saved.queue.length, 0);
+  const withBom = '\uFEFF' + source;
+  await f.send({ type: 'pending', submission: { ...item(2), code: withBom } });
+  await f.send({ type: 'verdict', submissionId: '2', leetcode: 'candidate', status: 'Accepted' });
+  f.receipts.set('2', withBom);
+  await f.send({ type: 'confirm', id: '2' }, options);
+  assert.equal(f.saved.queue.length, 0);
 });
 
 test('more than 30 accepted submissions are preserved until actual PR source is confirmed', async t => {

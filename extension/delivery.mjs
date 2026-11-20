@@ -42,9 +42,10 @@ export async function confirmSubmission(settings, input, fetchImpl = fetch) {
   if (!Number.isSafeInteger(pr.number) || pr.number < 1 || !/^[a-f0-9]{40}$/i.test(pr.head.sha)) throw new Error('PR 정보를 확인하지 못했습니다.');
   const file = await githubRequest(settings, `/contents/${paths.code.split('/').map(encodeURIComponent).join('/')}?ref=${pr.head.sha}`, {}, fetchImpl);
   if (file?.type !== 'file' || file.encoding !== 'base64' || file.size > 40000 || typeof file.content !== 'string') throw new Error('PR의 Java 파일 형식을 확인하지 못했습니다.');
-  let code;
-  try { code = new TextDecoder().decode(Uint8Array.from(atob(file.content), ch => ch.charCodeAt(0))); }
+  let bytes;
+  try { bytes = Uint8Array.from(atob(file.content), ch => ch.charCodeAt(0)); }
   catch { throw new Error('PR의 Java 원문을 읽지 못했습니다.'); }
-  if (code !== item.code) throw new Error('PR의 코드가 수집한 원문과 다릅니다. 로컬 원문을 유지합니다.');
+  const expected = new TextEncoder().encode(item.code);
+  if (bytes.length !== expected.length || bytes.some((value, index) => value !== expected[index])) throw new Error('PR의 코드가 수집한 원문과 다릅니다. 로컬 원문을 유지합니다.');
   return `https://github.com/${settings.repository}/pull/${pr.number}`;
 }

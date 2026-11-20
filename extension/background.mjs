@@ -3,6 +3,7 @@ import { dispatchSubmission, confirmSubmission } from './delivery.mjs';
 
 const alarmName = 'confirm-submission';
 const pendingStatus = status => ['Pending', 'Submitted (result unavailable)'].includes(status);
+const rejectedStatus = status => ['Wrong Answer', 'Time Limit Exceeded', 'Memory Limit Exceeded', 'Output Limit Exceeded', 'Runtime Error', 'Compile Error'].includes(status);
 const ready = (async () => {
   await chrome.storage.local.setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' });
   if (!await chrome.alarms.get(alarmName)) await chrome.alarms.create(alarmName, { periodInMinutes: 1 });
@@ -16,7 +17,7 @@ async function state() {
   await ready;
   const data = await chrome.storage.local.get(['settings', 'queue', 'history', 'lastError']);
   // 이전 버전에서 남긴 오답도 전송하거나 이력에 보관하지 않는다.
-  const queue = (data.queue || []).filter(item => item.submission.status === 'Accepted' || pendingStatus(item.submission.status));
+  const queue = (data.queue || []).filter(item => !rejectedStatus(item.submission.status));
   if (queue.length !== (data.queue || []).length) await chrome.storage.local.set({ queue });
   return { ...data, queue, history: data.history || [] };
 }
@@ -59,7 +60,7 @@ async function handle(message, sender) {
     record = queue.find(item => item.submission.submissionId === message.id);
     if (!record) throw new Error('대기 중인 제출이 없습니다.');
     if (!matches(record, settings)) throw new Error('수집 당시의 저장소와 멤버 설정으로 복원하세요.');
-    if (pendingStatus(record.submission.status)) {
+    if (record.submission.status !== 'Accepted') {
       const tabs = await chrome.tabs.query({ url: 'https://leetcode.com/*' });
       if (!tabs.length) throw new Error('로그인한 LeetCode 탭을 열고 새로 고친 뒤 다시 확인하세요.');
       try { await chrome.tabs.sendMessage(tabs[0].id, { type: 'recheck', submissionId: record.submission.submissionId, leetcode: record.submission.leetcode }, { frameId: 0 }); }
@@ -87,9 +88,13 @@ async function handle(message, sender) {
     if (!record) return {};
     if (!matches(record, settings) || message.leetcode?.toLowerCase() !== record.submission.leetcode.toLowerCase()) throw new Error('판정을 조회한 계정이 다릅니다.');
     if (typeof message.status !== 'string' || !message.status.trim() || message.status.length > 80) throw new Error('제출 판정 형식을 확인하세요.');
-    if (pendingStatus(message.status)) return {};
-    if (message.status !== 'Accepted') {
+    if (rejectedStatus(message.status)) {
       await chrome.storage.local.set({ queue: queue.filter(item => item !== record) });
+      return {};
+    }
+    if (message.status !== 'Accepted') {
+      record.message = '판정을 확정하지 못했습니다. 원문을 보관하며 판정 재확인으로 다시 조회할 수 있습니다.';
+      await chrome.storage.local.set({ queue });
       return {};
     }
     if (record.submission.status === 'Accepted') return {};

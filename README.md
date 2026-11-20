@@ -33,9 +33,11 @@
 판정을 아직 모르면 원문을 대기열에만 보관합니다. 탭을 일찍 닫거나 조회가 실패했다면, 로그인한 LeetCode 탭을 열고 확장에서 `판정 재확인`을 누릅니다. 정답 여부를 모르는 채로 전송하지 않습니다.
 
 ```text
-study/<member>/<problem-slug>/submissions/<submission-id>/Solution.java
-study/<member>/<problem-slug>/submissions/<submission-id>/submission.json
+study/<problem-slug>/<member>/submissions/<submission-id>/Solution.java
+study/<problem-slug>/<member>/submissions/<submission-id>/submission.json
 ```
+
+문제 폴더 안에 참여자별 풀이와 제출 이력이 모입니다. 기존 참여자 우선 경로로 만들어진 PR도 원문 확인과 면접을 계속 지원합니다. 이 변경을 받은 뒤 Chrome 확장 관리에서 수집 확장을 새로고침하고 LeetCode 탭도 새로 고칩니다.
 
 브랜치는 `leetcode/<member>/<problem-slug>/<submission-id>`입니다. 같은 제출을 다시 보내면 기존 PR을 사용합니다. 같은 ID의 내용이 달라지면 덮어쓰지 않으며, 닫은 PR은 다시 열지 않습니다. PR은 자동 병합하지 않습니다. GITHUB_TOKEN으로 만든 PR의 CI는 별도로 dispatch합니다.
 

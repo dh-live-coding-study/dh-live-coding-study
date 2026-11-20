@@ -17,13 +17,15 @@ export async function dispatchSubmission(settings, input, fetchImpl = fetch) {
 }
 
 async function githubRequest(settings, path, options, fetchImpl) {
+  const { optional = false, ...requestOptions } = options;
   let response;
   try {
     response = await fetchImpl(`https://api.github.com/repos/${settings.repository}${path}`, {
-      ...options, headers: { Authorization: `Bearer ${settings.token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'Content-Type': 'application/json' },
+      ...requestOptions, headers: { Authorization: `Bearer ${settings.token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'Content-Type': 'application/json' },
       credentials: 'omit', redirect: 'error', signal: AbortSignal.timeout(10000),
     });
   } catch { throw new Error('GitHub 응답을 확인하지 못했습니다. 원문을 보존했으니 실행 기록을 확인한 뒤 재시도하세요.'); }
+  if (optional && response.status === 404) return null;
   if (!response.ok) throw new Error(`GitHub 요청 실패: HTTP ${response.status}. 토큰 권한과 API 한도를 확인하세요.`);
   if (response.status === 204) return null;
   try { return await response.json(); } catch { throw new Error('GitHub 응답 형식을 확인하지 못했습니다.'); }
@@ -40,7 +42,12 @@ export async function confirmSubmission(settings, input, fetchImpl = fetch) {
   const pr = pulls.find(pr => pr.head?.ref === paths.branch && pr.base?.ref === 'main' && pr.head?.repo?.full_name?.toLowerCase() === settings.repository.toLowerCase());
   if (!pr) return null;
   if (!Number.isSafeInteger(pr.number) || pr.number < 1 || !/^[a-f0-9]{40}$/i.test(pr.head.sha)) throw new Error('PR 정보를 확인하지 못했습니다.');
-  const file = await githubRequest(settings, `/contents/${paths.code.split('/').map(encodeURIComponent).join('/')}?ref=${pr.head.sha}`, {}, fetchImpl);
+  let file;
+  for (const legacy of [false, true]) {
+    const candidate = submissionPaths(settings.member, item, { legacy });
+    file = await githubRequest(settings, `/contents/${candidate.code.split('/').map(encodeURIComponent).join('/')}?ref=${pr.head.sha}`, { optional: true }, fetchImpl);
+    if (file) break;
+  }
   if (file?.type !== 'file' || file.encoding !== 'base64' || file.size > 40000 || typeof file.content !== 'string') throw new Error('PR의 Java 파일 형식을 확인하지 못했습니다.');
   let bytes;
   try { bytes = Uint8Array.from(atob(file.content), ch => ch.charCodeAt(0)); }

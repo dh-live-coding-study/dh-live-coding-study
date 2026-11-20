@@ -7,16 +7,16 @@ import { fileURLToPath } from 'node:url';
 const bot = { login: 'github-actions[bot]', id: 41898282, type: 'Bot' };
 const root = fileURLToPath(new URL('..', import.meta.url));
 const config = { members: [{ id: 'learner', leetcode: 'candidate-lc', github: 'candidate' }], interview: { maxAttempts: 5 } };
-function fixture() {
+function fixture({ legacy = false } = {}) {
   const code = 'class Solution { int max(int a, int b) { return Math.max(a, b); } }';
   const metadata = { version: 1, member: 'learner', github: 'candidate', leetcode: 'candidate-lc', slug: 'example-problem', submissionId: '12345', language: 'java', status: 'Accepted', capturedAt: 1700000000, sourceSha256: sourceHash(code) };
-  const base = 'study/learner/example-problem/submissions/12345';
+  const base = legacy ? 'study/learner/example-problem/submissions/12345' : 'study/example-problem/learner/submissions/12345';
   const pr = { state: 'open', base: { ref: 'main' }, head: { ref: 'leetcode/learner/example-problem/12345', sha: 'source-head', repo: { full_name: 'study/team' } }, user: bot };
   const comments = [], calls = [], completions = [];
   const files = [{ filename: `${base}/Solution.java`, status: 'added' }, { filename: `${base}/submission.json`, status: 'added' }];
   let id = 0;
   const github = {
-    async readText(path) { return path.endsWith('Solution.java') ? code : JSON.stringify(metadata); },
+    async readText(path) { return path === `${base}/Solution.java` ? code : path === `${base}/submission.json` ? JSON.stringify(metadata) : null; },
     async list(path) { return path.includes('/files') ? files : comments; },
     async request(path, options = {}) {
       calls.push({ path, ...options });
@@ -62,6 +62,17 @@ test('foreign commenters, forged state, forks, extra files and changed source ca
   f.metadata.status = 'Wrong Answer'; await assert.rejects(f.run(), /정답 제출/); f.metadata.status = 'Accepted';
   f.metadata.sourceSha256 = 'wrong'; await assert.rejects(f.run(), /해시/);
   assert.equal(f.completions.length, 0);
+});
+
+test('legacy submission PRs can continue interviews, mixed layouts cannot', async () => {
+  const f = fixture({ legacy: true });
+  await f.run();
+  await f.run({ triggerCommentId: f.answer('I compare the two values.') });
+  assert.equal(f.completions.length, 2);
+  const g = fixture();
+  g.files[1].filename = 'study/learner/example-problem/submissions/12345/submission.json';
+  await assert.rejects(g.run(), /소스와 메타데이터/);
+  assert.equal(g.completions.length, 0);
 });
 
 test('retry after a completed response does not call the model again', async () => {

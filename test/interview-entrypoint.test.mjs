@@ -19,7 +19,7 @@ test('the Actions entry point exits unsuccessfully on LLM failure and preserves 
     await writeFile(join(directory, 'event.json'), '{}');
     const code = 'class Solution {}';
     const metadata = { version: 1, member: 'learner', github: 'candidate', leetcode: 'candidate-lc', slug: 'example-problem', submissionId: '12345', language: 'java', status: 'Accepted', capturedAt: 1700000000, sourceSha256: sourceHash(code) };
-    const base = 'study/learner/example-problem/submissions/12345';
+    const base = 'study/example-problem/learner/submissions/12345';
     const preload = `
       import { writeFile } from 'node:fs/promises';
       const code = ${JSON.stringify(code)}, metadata = ${JSON.stringify(metadata)}, base = ${JSON.stringify(base)};

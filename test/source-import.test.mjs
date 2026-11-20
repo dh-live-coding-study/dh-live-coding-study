@@ -34,6 +34,7 @@ test('source import preserves original UTF-8, CRLF and trailing spaces, retry cr
   const f = fixture();
   assert.equal((await f.run()).number, 7);
   const paths = submissionPaths('learner', input);
+  assert.equal(paths.code, 'study/example-problem/learner/submissions/12345/Solution.java');
   assert.equal(f.files.get(`head:${paths.code}`), code);
   const metadata = JSON.parse(f.files.get(`head:${paths.metadata}`));
   assert.equal(metadata.status, 'Accepted');
@@ -76,4 +77,20 @@ test('non-accepted submissions never create GitHub records', async () => {
     assert.equal((await f.run({ input: { ...input, status } })).number, 0);
   }
   assert.equal(f.calls.length, 0);
+});
+
+test('legacy submissions remain idempotent on open branches and after merging', async () => {
+  const f = fixture(); await f.run();
+  const current = submissionPaths('learner', input);
+  const legacy = submissionPaths('learner', input, { legacy: true });
+  for (const key of ['code', 'metadata']) {
+    f.files.set(`head:${legacy[key]}`, f.files.get(`head:${current[key]}`));
+    f.files.delete(`head:${current[key]}`);
+  }
+  assert.equal((await f.run()).number, 7);
+  assert.equal(f.calls.filter(call => call.path === '/git/commits').length, 1);
+  const g = fixture();
+  for (const key of ['code', 'metadata']) g.files.set(`main:${legacy[key]}`, f.files.get(`head:${legacy[key]}`));
+  assert.deepEqual(await g.run(), { number: 0, alreadyImported: true });
+  assert.equal(g.calls.some(call => call.method === 'POST'), false);
 });

@@ -14,8 +14,9 @@ export function validateSubmission(input) {
   return { submissionId, slug: input.slug, language: 'java', code: input.code, status: input.status, timestamp };
 }
 
-export function submissionPaths(member, item) {
+export function submissionPaths(member, item, { legacy = false } = {}) {
   if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,99}$/.test(member)) throw new Error('멤버 ID를 확인하세요.');
-  const root = `study/${member}/${item.slug}/submissions/${item.submissionId}`;
+  const group = legacy ? `${member}/${item.slug}` : `${item.slug}/${member}`;
+  const root = `study/${group}/submissions/${item.submissionId}`;
   return { root, code: `${root}/Solution.java`, metadata: `${root}/submission.json`, branch: `leetcode/${member}/${item.slug}/${item.submissionId}` };
 }

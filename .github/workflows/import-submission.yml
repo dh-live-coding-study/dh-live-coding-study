@@ -1,0 +1,39 @@
+name: Import Java submission
+run-name: Import submission by ${{ github.actor }}
+on:
+  workflow_dispatch:
+    inputs:
+      member:
+        description: Registered member ID
+        required: true
+        type: string
+      submission:
+        description: Submission JSON from the browser collector
+        required: true
+        type: string
+permissions: {}
+concurrency:
+  group: import-${{ github.actor }}-${{ fromJSON(inputs.submission).submissionId }}
+  cancel-in-progress: false
+jobs:
+  import:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - id: import
+        run: node scripts/import-submission.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

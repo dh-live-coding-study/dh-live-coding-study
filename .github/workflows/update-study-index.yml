@@ -1,0 +1,36 @@
+name: Update problem index
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'study/**'
+      - 'lib/study-index.mjs'
+      - 'lib/publish-study-index.mjs'
+      - 'scripts/update-study-index.mjs'
+      - '.github/workflows/update-study-index.yml'
+permissions: {}
+concurrency:
+  group: study-readme-index
+  cancel-in-progress: false
+jobs:
+  update:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - run: node scripts/update-study-index.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

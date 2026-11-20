@@ -2,6 +2,19 @@
 
 정답 판정을 받은 Java 제출 원문을 GitHub PR에 기록하고, PR 댓글에서 영어 모의 면접을 진행합니다. GitHub Actions가 [공개용 코칭 스킬](skills/java-live-coding-coach/SKILL.md)과 제출 코드를 LLM API에 전달하므로 별도 서버를 운영할 필요가 없습니다.
 
+## 문제와 풀이
+
+참여자 이름을 누르면 해당 문제의 최신 정답 코드로 이동합니다. 목록은 main에 병합된 풀이를 기준으로 합니다.
+
+<!-- study-index:start -->
+
+| 문제 | 난이도 | 풀이 |
+| --- | --- | --- |
+
+아직 병합된 풀이가 없습니다.
+
+<!-- study-index:end -->
+
 ## 시작하기
 
 설정, 소스 등록, 브라우저 수집, 댓글 면접 PR이 main에 순서대로 병합돼야 전체 흐름을 사용할 수 있습니다. `study.config.json`에 참여자를 등록합니다.
@@ -40,6 +53,8 @@ study/<problem-slug>/<member>/submissions/<submission-id>/submission.json
 문제 폴더 안에 참여자별 풀이와 제출 이력이 모입니다. 기존 참여자 우선 경로로 만들어진 PR도 원문 확인과 면접을 계속 지원합니다. 이 변경을 받은 뒤 Chrome 확장 관리에서 수집 확장을 새로고침하고 LeetCode 탭도 새로 고칩니다.
 
 브랜치는 `leetcode/<member>/<problem-slug>/<submission-id>`입니다. 같은 제출을 다시 보내면 기존 PR을 사용합니다. 같은 ID의 내용이 달라지면 덮어쓰지 않으며, 닫은 PR은 다시 열지 않습니다. PR은 자동 병합하지 않습니다. GITHUB_TOKEN으로 만든 PR의 CI는 별도로 dispatch합니다.
+
+풀이를 병합하면 `Update problem index`가 README 목록 갱신 PR을 만들거나 기존 목록 PR을 갱신합니다. 이 PR도 검토 후 병합합니다. 제출 PR의 코드와 면접 댓글은 변경하지 않습니다. 문제 제목과 난이도는 alfa API에서 가져와 문제 폴더의 `problem.json`에 보관합니다. 조회 실패는 `Unknown` 배지로 표시하며, Actions에서 이 워크플로를 다시 실행하면 재조회합니다. 목록은 자동 생성 구간만 바꾸므로 나머지 README 안내는 유지됩니다.
 
 실행 요청 접수는 PR 생성 완료와 다릅니다. 브라우저가 실행되는 동안 주기적으로 대기 항목 하나씩 PR과 정확한 head 커밋의 Java 파일을 확인합니다. **수집한 원문과 UTF-8 바이트가 같은 코드가 PR에 있음을 확인한 뒤에만 로컬 원문을 정리**합니다. 확인이 실패하거나 코드가 다르면 원문을 유지하며 `PR 확인` 버튼으로 다시 확인할 수 있습니다. API 한도나 브라우저 절전 상태에 따라 확인이 늦어질 수 있습니다.
 

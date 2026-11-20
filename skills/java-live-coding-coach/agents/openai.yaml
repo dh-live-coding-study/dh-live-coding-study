@@ -1,0 +1,4 @@
+interface:
+  display_name: "Java 라이브 코딩 면접 코치"
+  short_description: "영어 풀이 설명 교정과 Java 질문으로 라이브 코딩 면접 연습"
+  default_prompt: "$java-live-coding-coach로 LeetCode 풀이 설명을 구어체 영어로 교정하고, 제 Java 코드에 관한 면접 질문을 하나씩 해주세요."

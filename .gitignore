@@ -1,0 +1,7 @@
+.env
+.env.*
+.local/
+/skills/java-live-coding-coach/references/
+node_modules/
+*.class
+.DS_Store

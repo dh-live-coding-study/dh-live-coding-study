@@ -1,10 +1,10 @@
 # DH live coding study
 
-정답 판정을 받은 Java 제출 원문을 GitHub PR에 기록합니다. [Java 영어 면접 코칭 스킬](skills/java-live-coding-coach/SKILL.md)은 공개용 지침이며, 댓글 면접 연결은 별도 PR에서 추가합니다.
+정답 판정을 받은 Java 제출 원문을 GitHub PR에 기록하고, PR 댓글에서 영어 모의 면접을 진행합니다. GitHub Actions가 [공개용 코칭 스킬](skills/java-live-coding-coach/SKILL.md)과 제출 코드를 LLM API에 전달하므로 별도 서버를 운영할 필요가 없습니다.
 
 ## 시작하기
 
-이 PR과 선행 기본 설정 PR이 main에 병합돼야 워크플로를 실행할 수 있습니다. `study.config.json`에 참여자를 등록합니다.
+설정, 소스 등록, 브라우저 수집, 댓글 면접 PR이 main에 순서대로 병합돼야 전체 흐름을 사용할 수 있습니다. `study.config.json`에 참여자를 등록합니다.
 
 ```json
 "members": [
@@ -15,6 +15,8 @@
 `id`는 폴더 이름입니다. 수집 당시의 LeetCode 계정과 워크플로를 실행한 GitHub 계정을 등록된 값과 대조합니다. 설정 변경도 `leetcode/` 브랜치의 PR로 제출하고 검토 후 병합합니다.
 
 대표자는 조직과 저장소의 `Allow GitHub Actions to create and approve pull requests`를 허용합니다. 이 설정에서 생성과 승인이 묶여 있지만 구현은 PR 생성만 합니다. main에는 PR과 CI를 요구하고 갱신 허용 대상을 대표자로 제한합니다. 조직 owner와 저장소 admin도 대표자만 유지하고, 참여자는 조직의 일반 멤버와 저장소 Write 권한으로 등록합니다.
+
+면접을 사용하려면 대표자가 [LLM 키와 보호 설정](docs/representative-setup.md)을 먼저 완료합니다. 참여자는 LLM 키를 발급받지 않고 본인의 GitHub 토큰을 사용합니다.
 
 1. 본인의 fine-grained GitHub 토큰을 만듭니다. Resource owner는 스터디 조직, Repository access는 이 저장소 하나만 지정합니다.
 2. 권한은 `Actions: Read and write`, `Pull requests: Read-only`, `Contents: Read-only`로 지정합니다. 읽기 권한은 PR에 실제 원문이 저장됐는지 확인하는 데 사용합니다.
@@ -41,11 +43,23 @@ study/<member>/<problem-slug>/submissions/<submission-id>/submission.json
 
 미확인 대기열에는 기존 30건 제한을 두지 않습니다. 완료 이력은 원문 없이 PR 링크만 최근 30건을 보관하므로 완료된 제출이 새 원문 저장을 막지 않습니다. 전송 실패는 `다시 전송`으로 복구하며, 브라우저 저장 공간 자체의 오류는 확장 아이콘의 `!`로 알립니다. 사용자가 `로컬 기록 삭제`를 누른 항목은 복구할 수 없습니다.
 
+## PR 댓글 면접
+
+PR 생성 후 첫 질문이 자동으로 올라옵니다. 제출한 참여자가 영어 댓글로 답하면 한 번에 질문 하나가 이어집니다. 기본 `mock` 모드는 종료할 때 구어체 영어, 풀이 논리와 Java 선택 이유를 한국어로 피드백합니다. 중간 교정이 필요하면 대표자가 `interview.mode`를 `coach`로 설정합니다.
+
+- `/hint`: 작은 힌트를 요청합니다.
+- `/finish`: 종합 피드백을 받고 종료합니다.
+- `/retry`: 실패하거나 중단된 요청을 다시 보냅니다. 비용이 다시 발생할 수 있으므로 Actions 상태를 먼저 확인합니다.
+
+다른 사람의 댓글은 면접에 전달하지 않습니다. 기본 요청 한도는 PR당 12회이며 실패와 명시적 재시도도 포함합니다. 마지막 요청은 종료 피드백으로 사용합니다. 한 차례의 답변 합계가 8,000자를 넘으면 호출 없이 제외하므로 새 댓글로 짧게 답합니다. 긴 대화에서는 오래된 문답 일부를 LLM 입력에서 제외하지만 원본 댓글은 남깁니다.
+
+LLM 오류는 실패 상태 댓글과 실패한 Actions 실행으로 표시합니다. 자동으로 다시 호출하지 않습니다. 첫 질문이 없으면 대표자가 `Interview in PR comments`의 `Run workflow`에서 브랜치 `main`, PR 번호를 지정해 확인할 수 있습니다. 면접 도중 제출 코드가 바뀌면 해당 면접을 중지합니다.
+
 ## 수집 범위와 공개 정보
 
 설정한 브라우저에서 확장을 켠 뒤 새로 제출한 Java 코드가 대상입니다. 과거 이력, 다른 브라우저의 제출을 자동 수집하지 않습니다. 코드는 UTF-8 기준 40KB 이하, 전송 JSON은 60KB 이하입니다. 계정, 판정과 시각은 브라우저가 전달한 값이며 서버에서 LeetCode와 독립 대조한 증거는 아닙니다. 내부 웹 API가 바뀌면 수집기 수정이 필요할 수 있습니다.
 
-코드, PR과 워크플로 로그는 공개됩니다. 크기를 초과하거나 Notion 링크 패턴이 있는 코드는 보내지 않지만, 임의의 비밀이나 개인정보를 자동 판별하지는 못합니다. 비공개 참고자료, 제삼자의 경험담, 개인 문서 링크와 키를 코드에 넣지 않습니다.
+코드, PR 댓글과 워크플로 로그는 공개됩니다. 문제 본문, 제출 코드와 참여자의 답변은 설정한 LLM 제공자에게 전달됩니다. 크기를 초과하거나 Notion 링크 패턴이 있는 코드는 보내지 않지만, 임의의 비밀이나 개인정보를 자동 판별하지는 못합니다. 비공개 참고자료, 제삼자의 경험담, 개인 문서 링크와 키를 코드와 댓글에 넣지 않습니다.
 
 ## 검증
 
@@ -56,6 +70,8 @@ npm test
 npm run check:public
 ```
 
-모의 브라우저와 API로 정답만 전송, 30건 초과 보관, 확인된 원문의 정리, 불일치와 통신 실패 시 보존, 중복 PR 방지를 확인합니다. 실제 Chrome 설치, LeetCode 제출과 Actions를 연결한 검증은 별도로 필요합니다. 공개 검사는 모든 민감한 내용을 판별하지 않습니다.
+모의 브라우저와 API로 정답만 전송, 30건 초과 보관, 확인된 원문의 정리, 불일치와 통신 실패 시 보존, 중복 PR 방지, 면접 호출 권한과 실패 복구를 확인합니다. 실제 Chrome 설치, LeetCode 제출, Actions와 유료 LLM 호출을 연결한 검증은 별도로 필요합니다. 공개 검사는 모든 민감한 내용을 판별하지 않습니다.
 
 문제집: [LeetCode 75](https://leetcode.com/studyplan/leetcode-75/), [Top Interview Questions Easy](https://leetcode.com/explore/interview/card/top-interview-questions-easy/). 제출 감지 방식은 [LeetHub 3.0](https://github.com/raphaelheinz/LeetHub-3.0)을 참고해 별도로 작성했습니다. 자동 확인은 [Chrome alarms](https://developer.chrome.com/docs/extensions/reference/api/alarms), [GitHub PR 조회](https://docs.github.com/en/rest/pulls/pulls#list-pull-requests), [파일 조회](https://docs.github.com/en/rest/repos/contents#get-repository-content)를 사용합니다.
+
+문제 본문은 [alfa-leetcode-api](https://github.com/alfaarghya/alfa-leetcode-api)의 `/select`에서 가져옵니다. 제출 소스는 브라우저 수집기가 확보하며, 면접 자료에는 API의 힌트나 풀이를 포함하지 않습니다.

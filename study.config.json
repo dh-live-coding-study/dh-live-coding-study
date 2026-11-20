@@ -1,4 +1,16 @@
 {
   "version": 1,
-  "members": []
+  "members": [],
+  "apiBaseUrl": "https://alfa-leetcode-api.onrender.com",
+  "llm": {
+    "protocol": "chat-completions",
+    "baseUrl": "https://api.openai.com/v1",
+    "model": ""
+  },
+  "interview": {
+    "mode": "mock",
+    "maxAttempts": 12,
+    "maxInputCharacters": 48000,
+    "maxOutputTokens": 1600
+  }
 }

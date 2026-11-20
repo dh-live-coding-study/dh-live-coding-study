@@ -1,6 +1,12 @@
 {
   "version": 1,
-  "members": [],
+  "members": [
+    {
+      "id": "hyoyoon",
+      "leetcode": "hyoyoonnam",
+      "github": "HyoyoonNam"
+    }
+  ],
   "apiBaseUrl": "https://alfa-leetcode-api.onrender.com",
   "llm": {
     "protocol": "chat-completions",

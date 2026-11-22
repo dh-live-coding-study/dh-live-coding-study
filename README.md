@@ -21,7 +21,7 @@
 
 ### 1. 확장 파일 받기
 
-[최신 main ZIP 받기](https://github.com/dh-live-coding-study/dh-live-coding-study/archive/refs/heads/main.zip)를 눌러 압축을 풉니다. 저장소의 **Code → Download ZIP**으로 받아도 됩니다. 이미 저장소를 clone했다면 최신 main의 파일을 사용합니다.
+[최신 main ZIP 받기](https://github.com/quantum-jumpers/dh-live-coding-study/archive/refs/heads/main.zip)를 눌러 압축을 풉니다. 저장소의 **Code → Download ZIP**으로 받아도 됩니다. 이미 저장소를 clone했다면 최신 main의 파일을 사용합니다.
 
 압축을 푼 폴더 안의 **`extension/`**에 `manifest.json`이 있는지 확인하세요. 이 폴더를 Chrome이 계속 읽으므로 설치 후에도 지우거나 옮기지 않습니다. 별도 빌드나 npm 설치는 필요 없습니다.
 
@@ -42,7 +42,7 @@
 
 | 항목 | 선택할 값 |
 | --- | --- |
-| Resource owner | `dh-live-coding-study` 조직 |
+| Resource owner | `quantum-jumpers` 조직 |
 | Repository access | **Only select repositories** → `dh-live-coding-study` 저장소 |
 | Repository permissions → Actions | **Read and write** |
 | Repository permissions → Contents | **Read-only** |
@@ -60,7 +60,7 @@ Chrome 도구 모음의 **확장 프로그램(퍼즐 아이콘)**에서 **DH Lee
 
 | 확장 입력란 | 입력할 값 |
 | --- | --- |
-| GitHub 저장소 (owner/repo) | `dh-live-coding-study/dh-live-coding-study` |
+| GitHub 저장소 (owner/repo) | `quantum-jumpers/dh-live-coding-study` |
 | 설정 파일에 등록한 멤버 ID | 본인 항목의 **`id`**. GitHub 아이디와 다를 수 있습니다. |
 | LeetCode 아이디 | 같은 항목의 **`leetcode`**. 실제 제출할 LeetCode 계정입니다. |
 | 본인의 GitHub fine-grained 토큰 | 3단계에서 본인 GitHub 계정으로 발급한 토큰 |

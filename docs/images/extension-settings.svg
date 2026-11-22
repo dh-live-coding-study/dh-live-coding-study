@@ -31,7 +31,7 @@
   <text x="412" y="108" font-size="22" font-weight="700">LeetCode 제출 수집</text>
   <text x="412" y="146" class="label">GitHub 저장소 (owner/repo)</text>
   <rect x="412" y="158" width="494" height="40" rx="5" fill="#f8fafc" stroke="#a9b8cb"/>
-  <text x="425" y="184" class="code" style="font-size:17px">dh-live-coding-study/dh-live-coding-study</text>
+  <text x="425" y="184" class="code" style="font-size:17px">quantum-jumpers/dh-live-coding-study</text>
   <text x="412" y="237" class="label">설정 파일에 등록한 멤버 ID</text>
   <rect x="412" y="249" width="494" height="40" rx="5" fill="#eef5ff" stroke="#2665bc"/>
   <text x="425" y="276" class="code">learner</text>

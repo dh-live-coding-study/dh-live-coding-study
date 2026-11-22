@@ -7,6 +7,14 @@ if (settings) for (const [key, value] of Object.entries(settings)) {
   const field = form.elements.namedItem(key);
   if (field) { if (field.type === 'checkbox') field.checked = value; else field.value = value; }
 }
+const repository = form.elements.namedItem('repository');
+function updateConfigLink() {
+  const link = document.querySelector('#config');
+  if (/^[a-z0-9_.-]+\/[a-z0-9_.-]+$/i.test(repository.value)) link.href = `https://github.com/${repository.value}/blob/main/study.config.json`;
+  else link.removeAttribute('href');
+}
+repository.addEventListener('input', updateConfigLink);
+updateConfigLink();
 async function refresh() {
   const response = await chrome.runtime.sendMessage({ type: 'queue' });
   status.textContent = response.error || response.lastError || '';

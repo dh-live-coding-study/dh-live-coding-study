@@ -21,7 +21,7 @@ LeetCode Java 정답을 GitHub PR로 모으고, 댓글로 영어 모의 면접�
 
 ### 1. Chrome에 확장 등록
 
-1. [최신 ZIP](https://github.com/dh-live-coding-study/dh-live-coding-study/archive/refs/heads/main.zip)을 받아 압축을 풉니다.
+1. [최신 ZIP](https://github.com/quantum-jumpers/dh-live-coding-study/archive/refs/heads/main.zip)을 받아 압축을 풉니다.
 2. Chrome 주소창에 `chrome://extensions`를 입력하고 **개발자 모드**를 켭니다.
 3. **압축해제된 확장 프로그램을 로드합니다(Load unpacked)** 를 누르고, `manifest.json`이 있는 **`extension/` 폴더**를 선택합니다. 설치 후에도 이 폴더는 그대로 보관합니다.
 
@@ -33,7 +33,7 @@ LeetCode Java 정답을 GitHub PR로 모으고, 댓글로 영어 모의 면접�
 
 | 항목 | 선택할 값 |
 | --- | --- |
-| Resource owner | `dh-live-coding-study` |
+| Resource owner | `quantum-jumpers` |
 | Repository access | **Only select repositories** → `dh-live-coding-study` |
 | Actions | **Read and write** |
 | Contents | **Read-only** |
@@ -47,7 +47,7 @@ Chrome의 퍼즐 아이콘에서 **DH LeetCode submission collector**를 엽니�
 
 | 입력란 | 입력할 값 |
 | --- | --- |
-| GitHub 저장소 | `dh-live-coding-study/dh-live-coding-study` |
+| GitHub 저장소 | `quantum-jumpers/dh-live-coding-study` |
 | 멤버 ID | 본인 항목의 `id` |
 | LeetCode 아이디 | 본인 항목의 `leetcode` |
 | GitHub fine-grained 토큰 | 방금 발급한 개인 토큰 |
